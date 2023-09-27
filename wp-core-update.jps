@@ -3,7 +3,7 @@ jpsVersion: 6.1.1
 name: Replace / Upgrade WordPress Core Files
 id: wp-core-update
 targetEditions: any
-logo: /images/replace.png
+logo: /images/core-replace.png
 description:
   text:  This Add-On will replace or update WordPress's core files. Specify a [WordPress release](https://wordpress.org/download/releases/) below.
   short: Replace or Update WordPress's core files.
