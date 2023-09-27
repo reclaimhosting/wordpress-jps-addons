@@ -1,0 +1,57 @@
+type: update
+jpsVersion: 6.1.1
+name: Install Pressbooks dependencies
+id: pb-dependencies
+targetEditions: any
+logo: /images/pb-logo.png
+description:
+  text:  This add-on will install [EpubCheck](https://github.com/w3c/epubcheck), [Saxon-HE](https://sourceforge.net/projects/saxon/files/Saxon-HE/), and the free noncommercial use version of [PrinceXML](https://www.princexml.com/). You should read the [End User License Agreement for PrinceXML](https://www.princexml.com/license/) before using it to determine if your use case fits into the terms of its noncommercial license. If you wish to remove the watermark from PDF files it creates, or your have a commercial use case, you should [buy a license for PrinceXML](https://www.princexml.com/purchase/) and [follow their instructions to install the license file](https://www.princexml.com/doc/installing/#installing-a-license-file-on-other-systems).
+  short: Install dependencies necessary for import and export of Pressbooks books.
+
+baseUrl: https://raw.githubusercontent.com/reclaimhosting/wordpress-jps-addons/main
+
+targetNodes:
+  nodeType:
+    - nginxphp
+    - litespeedphp
+    - lemp
+    - llsmp
+
+onInstall:
+  - cmd[${targetNodes.nodeGroup}]: |-
+      cd /tmp
+      # Install JDK, ghostscript, and poppler-utils
+      yum install java-11-openjdk ghostscript poppler-utils -y
+
+      # Find latest release of EpubCheck
+      function get_epubcheck_release {
+        curl --silent "https://api.github.com/repos/w3c/epubcheck/releases/latest" |
+        grep '"tag_name":' |
+        sed -E 's/.*"([^"]+)".*/\1/' |
+        sed 's/v//'
+      }
+      EPUBCHECK_LATEST=`get_epubcheck_release`
+
+      # Install EpubCheck
+      wget https://github.com/w3c/epubcheck/releases/download/v$EPUBCHECK_LATEST/epubcheck-$EPUBCHECK_LATEST.zip
+      unzip epubcheck-$EPUBCHECK_LATEST.zip
+      mv epubcheck-$EPUBCHECK_LATEST/ /opt/epubcheck/
+      rm epubcheck-$EPUBCHECK_LATEST.zip
+
+      # Install SaxonHE
+      wget https://master.dl.sourceforge.net/project/saxon/Saxon-HE/9.7/SaxonHE9-7-0-10J.zip
+      unzip SaxonHE9-7-0-10J.zip -d /tmp/saxon-he
+      mv /tmp/saxon-he/saxon9he.jar /tmp/saxon-he/saxon-he.jar
+      mv /tmp/saxon-he /opt/saxon-he
+      rm SaxonHE9-7-0-10J.zip
+
+      # Install PrinceXML
+      PRINCE_LATEST=`curl -s https://www.princexml.com/download/ | grep 'centos7.x86_64.rpm">' | cut -d '"' -f4 | cut -d '/' -f3`
+      wget https://www.princexml.com/download/$PRINCE_LATEST
+      yum install $PRINCE_LATEST -y
+      rm $PRINCE_LATEST
+      
+    user: root
+    
+success: |
+    Dependencies installed. Find out more information about running Pressbooks on Reclaim Cloud here: [https://support.reclaimhosting.com/hc/en-us/articles/17808803590167](https://support.reclaimhosting.com/hc/en-us/articles/17808803590167)
